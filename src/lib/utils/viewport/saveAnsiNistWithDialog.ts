@@ -54,14 +54,27 @@ export async function saveAnsiNist(filePath: string, viewport: Viewport) {
 
     const minutiaeXml = minutiae
         .map((m, idx) => {
-            // Normalize angle to degrees
-            const angleDeg = m.angleRad * (180 / Math.PI) + 90;
-            const typeInfo = existingTypes.find(t => t.id === m.typeId);
+            // Normalize angle to degrees in range [0, 359]
+            let angleDeg = m.angleRad * (180 / Math.PI) + 90;
+            angleDeg = ((Math.round(angleDeg) % 360) + 360) % 360;
+
             let categoryCode = "UNK";
-            if (typeInfo) {
-                const name = typeInfo.name.toLowerCase();
-                if (name.includes("end")) categoryCode = "END";
-                if (name.includes("bif")) categoryCode = "BIF";
+            if (m.typeId === "e6cbde52-5a18-4236-8287-7a1daf941ba9") {
+                categoryCode = "END";
+            } else if (m.typeId === "f47c4b97-2d62-4959-aa21-edebfa7a756a") {
+                categoryCode = "BIF";
+            } else {
+                const typeInfo = existingTypes.find(t => t.id === m.typeId);
+                if (typeInfo) {
+                    const name = typeInfo.name.toLowerCase();
+                    if (name.includes("end") || name.includes("ending"))
+                        categoryCode = "END";
+                    else if (
+                        name.includes("bif") ||
+                        name.includes("bifurcation")
+                    )
+                        categoryCode = "BIF";
+                }
             }
 
             return `

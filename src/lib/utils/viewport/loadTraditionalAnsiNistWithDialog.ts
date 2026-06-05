@@ -292,16 +292,16 @@ export async function loadTraditionalAnsiNist(
     const minutiaeFound = minRec ? processMinutiae(minRec, canvasId) : false;
 
     if (!imageLoaded && !minutiaeFound)
-        throw new Error("Brak danych biometrycznych.");
+        throw new Error(t("No biometric data.", { ns: "dialog" }));
 
     if (imageLoaded && !minutiaeFound) {
-        await message("Wczytano obraz, brak minucji.", {
-            title: "Info",
+        await message(t("Loaded image, no minutiae.", { ns: "dialog" }), {
+            title: t("Info", { ns: "dialog" }),
             kind: "info",
         });
     } else if (!imageLoaded && minutiaeFound) {
-        await message("Wczytano minucje, brak obrazu.", {
-            title: "Warning",
+        await message(t("Loaded minutiae, no image.", { ns: "dialog" }), {
+            title: t("Warning", { ns: "dialog" }),
             kind: "warning",
         });
     }

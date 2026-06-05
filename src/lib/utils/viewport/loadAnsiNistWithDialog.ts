@@ -59,7 +59,10 @@ export async function loadAnsiNist(filePath: string, viewport: Viewport) {
     const parseError = xmlDoc.querySelector("parsererror");
     if (parseError) {
         throw new Error(
-            "Wybrany plik XML jest uszkodzony lub ma nieprawidłowy format. Został odrzucony przez parser."
+            t(
+                "XML file is corrupt or has an invalid format. Rejected by parser.",
+                { ns: "dialog" }
+            )
         );
     }
 
@@ -68,13 +71,11 @@ export async function loadAnsiNist(filePath: string, viewport: Viewport) {
 
     if (b64Text) {
         let imageBytes = base64ToUint8Array(b64Text.trim());
-        // Detect WSQ magic number: FF A0 FF A8
+        // Detect WSQ magic number (SOI is FF A0)
         if (
-            imageBytes.length > 4 &&
+            imageBytes.length > 2 &&
             imageBytes[0] === 0xff &&
-            imageBytes[1] === 0xa0 &&
-            imageBytes[2] === 0xff &&
-            imageBytes[3] === 0xa8
+            imageBytes[1] === 0xa0
         ) {
             imageBytes = wsqToPNG(imageBytes);
         }
@@ -84,39 +85,45 @@ export async function loadAnsiNist(filePath: string, viewport: Viewport) {
 
     const minutiaeNodes = [
         ...Array.from(xmlDoc.getElementsByTagNameNS("*", "MinutiaeFeature")),
-        ...Array.from(xmlDoc.getElementsByTagName("biom:MinutiaeFeature")),
-        ...Array.from(xmlDoc.getElementsByTagName("MinutiaeFeature")),
         ...Array.from(xmlDoc.getElementsByTagNameNS("*", "EFSMinutia")),
-        ...Array.from(xmlDoc.getElementsByTagName("biom:EFSMinutia")),
-        ...Array.from(xmlDoc.getElementsByTagName("EFSMinutia")),
         ...Array.from(xmlDoc.getElementsByTagNameNS("*", "INCITSMinutia")),
-        ...Array.from(xmlDoc.getElementsByTagName("biom:INCITSMinutia")),
-        ...Array.from(xmlDoc.getElementsByTagName("INCITSMinutia")),
     ];
 
     if (minutiaeNodes.length === 0 && !imageLoaded) {
         throw new Error(
-            "W pliku nie znaleziono żadnych użytecznych danych biometrycznych (ani obsługiwanego obrazu, ani minucji). Możliwe, że jest to plik zawierający wyłącznie dane tekstowe."
+            t(
+                "No usable biometric data found in the file (neither supported image nor minutiae).",
+                { ns: "dialog" }
+            )
         );
     }
 
     if (minutiaeNodes.length === 0 && imageLoaded) {
         await message(
-            "Wczytano obraz z pliku, ale nie zawierał on żadnych zapisanych minucji (brak rekordu Type-9).",
-            { title: "Informacja o pliku", kind: "info" }
+            t(
+                "Loaded image from file, but it did not contain any saved minutiae.",
+                { ns: "dialog" }
+            ),
+            {
+                title: t("File info", { ns: "dialog" }),
+                kind: "info",
+            }
         );
     } else if (minutiaeNodes.length > 0 && !imageLoaded) {
         await message(
-            "Wczytano minucje, ale plik nie zawierał obrazu (lub format obrazu nie jest obsługiwany).",
-            { title: "Informacja o pliku", kind: "warning" }
+            t(
+                "Loaded minutiae, but the file did not contain an image (or the image format is not supported).",
+                { ns: "dialog" }
+            ),
+            {
+                title: t("File info", { ns: "dialog" }),
+                kind: "warning",
+            }
         );
     }
 
     if (minutiaeNodes.length > 0) {
-        // remove duplicates
-        const uniqueNodes = Array.from(new Set(minutiaeNodes));
-
-        const importedMarkings = uniqueNodes.map((node, index) => {
+        const importedMarkings = minutiaeNodes.map((node, index) => {
             const xText =
                 getElementText(node, "MinutiaeXCoordinate") ||
                 getElementText(
