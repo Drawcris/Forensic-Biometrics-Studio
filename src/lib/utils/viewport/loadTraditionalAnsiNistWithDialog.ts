@@ -9,11 +9,9 @@ import { t } from "i18next";
 import { Viewport } from "pixi-viewport";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { RayMarking } from "@/lib/markings/RayMarking";
-import { MarkingTypesStore } from "@/lib/stores/MarkingTypes/MarkingTypes";
-import { Point } from "@/lib/markings/Point";
 import { wsqToPNG } from "@li0ard/wsq";
-import { resolveSourceafisTypeId } from "./autoMarkWithSourceafis";
 import { loadImage } from "./loadImage";
+import { createMinutiaMarking } from "./ansiNistHelper";
 
 interface AnsiRecord {
     type: number;
@@ -107,7 +105,8 @@ function parseTraditional(buffer: Uint8Array): AnsiRecord[] {
 
     while (pos < buffer.length) {
         const { len, rType, isTagValue } = getRecordInfo(buffer, pos);
-        if (len <= 0 || pos + len > buffer.length) break;
+        if (!Number.isFinite(len) || len <= 0 || pos + len > buffer.length)
+            break;
 
         const recordBuf = buffer.slice(pos, pos + len);
         if (isTagValue) {
@@ -243,24 +242,9 @@ function processMinutiae(record: AnsiRecord, canvasId: string): boolean {
             const x = parseInt(items[1]!, 10);
             const y = parseInt(items[2]!, 10);
             const angleDeg = parseFloat(items[3]!);
-            const typeStr =
-                items[4] === "1" || (items[4] && items[4].includes("BIF"))
-                    ? "bifurcation"
-                    : "ending";
+            const typeText = items[4];
 
-            const typeId =
-                resolveSourceafisTypeId(typeStr) ||
-                MarkingTypesStore.state.types[0]?.id ||
-                "unknown";
-            const angleRad = (angleDeg - 90) * (Math.PI / 180);
-
-            return new RayMarking(
-                idx + 1,
-                { x, y } as Point,
-                typeId,
-                angleRad,
-                []
-            );
+            return createMinutiaMarking(idx + 1, x, y, angleDeg, typeText);
         })
         .filter((m): m is RayMarking => m !== null);
 

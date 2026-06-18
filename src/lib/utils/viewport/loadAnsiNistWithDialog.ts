@@ -9,11 +9,9 @@ import { t } from "i18next";
 import { Viewport } from "pixi-viewport";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { RayMarking } from "@/lib/markings/RayMarking";
-import { MarkingTypesStore } from "@/lib/stores/MarkingTypes/MarkingTypes";
-import { Point } from "@/lib/markings/Point";
 import { wsqToPNG } from "@li0ard/wsq";
-import { resolveSourceafisTypeId } from "./autoMarkWithSourceafis";
 import { loadImage } from "./loadImage";
+import { createMinutiaMarking } from "./ansiNistHelper";
 
 function base64ToUint8Array(base64: string): Uint8Array {
     const binaryString = window.atob(base64);
@@ -123,51 +121,45 @@ export async function loadAnsiNist(filePath: string, viewport: Viewport) {
     }
 
     if (minutiaeNodes.length > 0) {
-        const importedMarkings = minutiaeNodes.map((node, index) => {
-            const xText =
-                getElementText(node, "MinutiaeXCoordinate") ||
-                getElementText(
-                    node,
-                    "ImageLocationHorizontalCoordinateMeasure"
-                ) ||
-                getElementText(node, "PositionHorizontalCoordinateValue");
-            const yText =
-                getElementText(node, "MinutiaeYCoordinate") ||
-                getElementText(
-                    node,
-                    "ImageLocationVerticalCoordinateMeasure"
-                ) ||
-                getElementText(node, "PositionVerticalCoordinateValue");
-            const dirText =
-                getElementText(node, "MinutiaeDirectionAngleMeasure") ||
-                getElementText(node, "ImageLocationThetaAngleMeasure") ||
-                "0";
-            const typeText =
-                getElementText(node, "MinutiaeCategoryCode") ||
-                getElementText(node, "EFSMinutiaCategoryCode") ||
-                getElementText(node, "INCITSMinutiaCategoryCode");
+        const importedMarkings = minutiaeNodes
+            .map((node, index) => {
+                const xText =
+                    getElementText(node, "MinutiaeXCoordinate") ||
+                    getElementText(
+                        node,
+                        "ImageLocationHorizontalCoordinateMeasure"
+                    ) ||
+                    getElementText(node, "PositionHorizontalCoordinateValue");
+                const yText =
+                    getElementText(node, "MinutiaeYCoordinate") ||
+                    getElementText(
+                        node,
+                        "ImageLocationVerticalCoordinateMeasure"
+                    ) ||
+                    getElementText(node, "PositionVerticalCoordinateValue");
+                const dirText =
+                    getElementText(node, "MinutiaeDirectionAngleMeasure") ||
+                    getElementText(node, "ImageLocationThetaAngleMeasure") ||
+                    "0";
+                const typeText =
+                    getElementText(node, "MinutiaeCategoryCode") ||
+                    getElementText(node, "EFSMinutiaCategoryCode") ||
+                    getElementText(node, "INCITSMinutiaCategoryCode") ||
+                    undefined;
 
-            const x = xText ? parseInt(xText, 10) : 0;
-            const y = yText ? parseInt(yText, 10) : 0;
-            const angleDeg = dirText ? parseFloat(dirText) : 0;
-            const angleRad = (angleDeg - 90) * (Math.PI / 180);
+                const x = xText ? parseInt(xText, 10) : 0;
+                const y = yText ? parseInt(yText, 10) : 0;
+                const angleDeg = dirText ? parseFloat(dirText) : 0;
 
-            let typeStr = "ending";
-            if (typeText && typeText.includes("BIF")) typeStr = "bifurcation";
-
-            const typeId =
-                resolveSourceafisTypeId(typeStr) ||
-                MarkingTypesStore.state.types[0]?.id ||
-                "unknown-type-id";
-
-            return new RayMarking(
-                index + 1,
-                { x, y } as Point,
-                typeId,
-                angleRad,
-                []
-            );
-        });
+                return createMinutiaMarking(
+                    index + 1,
+                    x,
+                    y,
+                    angleDeg,
+                    typeText
+                );
+            })
+            .filter((m): m is RayMarking => m !== null);
 
         MarkingsStore(canvasId).actions.markings.addManyForLoading(
             importedMarkings

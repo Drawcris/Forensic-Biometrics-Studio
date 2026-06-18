@@ -9,6 +9,10 @@ import { Sprite } from "pixi.js";
 import { RayMarking } from "@/lib/markings/RayMarking";
 import { MARKING_CLASS } from "@/lib/markings/MARKING_CLASS";
 import { MarkingTypesStore } from "@/lib/stores/MarkingTypes/MarkingTypes";
+import {
+    TYPE_ID_BIFURCATION,
+    TYPE_ID_RIDGE_ENDING,
+} from "./autoMarkWithSourceafis";
 
 function getBase64FromSprite(sprite: Sprite): string | null {
     try {
@@ -22,7 +26,7 @@ function getBase64FromSprite(sprite: Sprite): string | null {
         const { source } = sprite.texture.baseTexture.resource;
         if (source) {
             ctx.drawImage(source, 0, 0);
-            return canvas.toDataURL("image/jpeg").split(",")[1] ?? null;
+            return canvas.toDataURL("image/png").split(",")[1] ?? null;
         }
         return null;
     } catch (e) {
@@ -59,9 +63,9 @@ export async function saveAnsiNist(filePath: string, viewport: Viewport) {
             angleDeg = ((Math.round(angleDeg) % 360) + 360) % 360;
 
             let categoryCode = "UNK";
-            if (m.typeId === "e6cbde52-5a18-4236-8287-7a1daf941ba9") {
+            if (m.typeId === TYPE_ID_RIDGE_ENDING) {
                 categoryCode = "END";
-            } else if (m.typeId === "f47c4b97-2d62-4959-aa21-edebfa7a756a") {
+            } else if (m.typeId === TYPE_ID_BIFURCATION) {
                 categoryCode = "BIF";
             } else {
                 const typeInfo = existingTypes.find(t => t.id === m.typeId);

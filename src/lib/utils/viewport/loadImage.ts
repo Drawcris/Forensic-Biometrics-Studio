@@ -85,17 +85,10 @@ export async function loadImage(
     fitWorld(viewport);
     emitFitEvents(viewport, "fit-world");
 
-    if (typeof filePathOrData === "string") {
-        const defaultMarkingsFilePath = `${filePathOrData}.json`;
-        if (await exists(defaultMarkingsFilePath)) {
-            await loadMarkingsData(defaultMarkingsFilePath, canvasId);
-        } else {
-            MarkingsStore(canvasId).actions.markings.reset();
-            MarkingsStore(canvasId).actions.labelGenerator.reset();
-            MarkingsStore(
-                getOppositeCanvasId(canvasId)
-            ).actions.labelGenerator.reset();
-        }
+    const markingsPath =
+        typeof filePathOrData === "string" ? `${filePathOrData}.json` : null;
+    if (markingsPath && (await exists(markingsPath))) {
+        await loadMarkingsData(markingsPath, canvasId);
     } else {
         MarkingsStore(canvasId).actions.markings.reset();
         MarkingsStore(canvasId).actions.labelGenerator.reset();
