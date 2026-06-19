@@ -86,6 +86,9 @@ export type i18nKeywords = Recordify<
     | "Select a working mode to view marking types"
     | "Select working mode"
     | "No marking types found for the selected working mode"
+    | "Modifiers"
+    | "No modifiers yet"
+    | "Compute"
 >;
 
 export type i18nDescription = Recordify<
@@ -98,6 +101,7 @@ export type i18nDescription = Recordify<
     | "Configure report metadata"
     | "Configure default report data"
     | "Generate PDF report"
+    | "Manage marking types"
 >;
 
 export type i18nModes = Recordify<WORKING_MODE>;
@@ -203,6 +207,41 @@ export type i18nTooltip = Recordify<
     | "Save ANSI/NIST (XML) data"
     | "Load ANSI/NIST (XML) data"
     | "Load Traditional ANSI/NIST (.an2, .eft)"
+    | "brightness_desc"
+    | "contrast_desc"
+    | "fft_desc"
+    | "Disable"
+    | "Enable"
+    | "Edit settings"
+    | 'Click "Compute" to analyse the frequency spectrum'
+    | "Drag to reorder"
+    | "Move up"
+    | "Move down"
+    | "Image enhancement"
+    | "GBFEN"
+    | "SNFEN"
+    | "gbfen_desc"
+    | "snfen_desc"
+    | "Enhancement: GBFEN started"
+    | "Enhancement: SNFEN started"
+    | "Enhancement: GBFEN done in {{seconds}}s"
+    | "Enhancement: SNFEN done in {{seconds}}s"
+    | "Enhancement: using existing output"
+    | "Enhancement failed: {{error}}"
+    | "Enhancement DPI"
+    | "Enhancement DPI hint"
+    | "Enhancement status"
+    | "Enhancement: pending"
+    | "Enhancement: processing"
+    | "Enhancement: ready"
+    | "Enhancement: failed"
+    | "Enhancement output path"
+    | "Re-run enhancement"
+    | "Took {{seconds}} s"
+    | "Method"
+    | "GBFEN — Gabor-based enhancement"
+    | "SNFEN — Neural enhancement"
+    | "Enhancing image..."
 >;
 
 export type i18nDialog = Recordify<
